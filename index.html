@@ -3,68 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>真题错题复盘器 V2</title>
+  <title>错题随机复习生成器</title>
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-      background: #f4f7fb;
+      background: #f5f7fb;
       color: #1f2937;
     }
-
     header {
-      background: radial-gradient(circle at top left, #60a5fa, transparent 28%), linear-gradient(135deg, #1d4ed8, #7c3aed 58%, #db2777);
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white;
-      padding: 34px 18px;
       text-align: center;
+      padding: 34px 16px;
     }
-
-    header h1 { margin: 0 0 10px; font-size: 32px; }
+    header h1 { margin: 0 0 8px; font-size: 30px; }
     header p { margin: 0; opacity: 0.92; }
-
-    main {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 22px 14px 48px;
-    }
-
+    main { max-width: 1100px; margin: 0 auto; padding: 20px 14px 46px; }
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
-
-    .stat-card, .panel {
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    .stat, .panel {
+      background: white;
       border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
     }
-
-    .stat-card { padding: 16px; }
-    .stat-card .label { color: #6b7280; font-size: 14px; margin-bottom: 8px; }
-    .stat-card .value { font-size: 27px; font-weight: 850; }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 390px 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
+    .stat { padding: 15px; }
+    .stat .label { color: #6b7280; font-size: 14px; margin-bottom: 8px; }
+    .stat .value { font-size: 28px; font-weight: 800; }
+    .layout { display: grid; grid-template-columns: 360px 1fr; gap: 18px; align-items: start; }
     .panel { padding: 18px; margin-bottom: 18px; }
-    .panel h2 { margin: 0 0 14px; font-size: 20px; }
-
-    .hint {
-      color: #6b7280;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 8px 0 0;
+    h2 { margin: 0 0 14px; font-size: 20px; }
+    label { display: block; color: #4b5563; font-size: 14px; margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 10px 11px;
+      font-size: 15px;
+      outline: none;
+      background: white;
     }
-
+    input:focus, select:focus, textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+    textarea { min-height: 84px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    button, .file-label {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: #2563eb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:hover, .file-label:hover { opacity: 0.9; }
+    button.success { background: #16a34a; }
+    button.danger { background: #dc2626; }
+    button.gray, .file-label { background: #374151; }
+    button.soft { background: #eef2ff; color: #3730a3; }
+    input[type="file"] { display: none; }
+    .notice { min-height: 20px; margin-top: 10px; color: #047857; font-size: 14px; line-height: 1.6; }
+    .error { color: #dc2626; }
     .alert {
       border: 1px solid #fecaca;
       background: #fef2f2;
@@ -73,416 +86,125 @@
       padding: 10px 12px;
       font-size: 14px;
       line-height: 1.7;
-      margin: 10px 0 12px;
-    }
-
-    .mode-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .mode-switch button.active {
-      background: #2563eb;
-      color: white;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
-    }
-
-    .advanced-field.hidden {
-      display: none;
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
-      color: #4b5563;
-      margin: 12px 0 6px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 10px 11px;
-      font-size: 15px;
-      background: #fff;
-      color: #111827;
-      outline: none;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
-    }
-
-    textarea { min-height: 76px; resize: vertical; }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    button, .file-label {
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 750;
-      cursor: pointer;
-      background: #2563eb;
-      color: white;
-      transition: transform 0.08s ease, opacity 0.15s ease, box-shadow 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
-    }
-
-    button:hover, .file-label:hover { opacity: 0.9; }
-    button:active, .file-label:active { transform: translateY(1px); }
-    button.secondary, .file-label.secondary { background: #374151; box-shadow: none; }
-    button.success { background: #16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.18); }
-    button.warning { background: #f59e0b; color: #111827; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.18); }
-    button.danger { background: #dc2626; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16); }
-    button.ghost { background: #eef2ff; color: #3730a3; box-shadow: none; }
-    button.soft { background: #f3f4f6; color: #374151; box-shadow: none; }
-    input[type="file"] { display: none; }
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(130px, 1fr));
-      gap: 10px;
       margin-bottom: 12px;
     }
-
-    .review-grid, .wrong-list, .weak-list { display: grid; gap: 12px; }
-
-    .weak-item {
-      display: grid;
-      grid-template-columns: 26px 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 10px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      background: #fff;
-      font-size: 14px;
-    }
-
-    .weak-bar {
-      height: 8px;
-      border-radius: 999px;
-      background: #e5e7eb;
-      overflow: hidden;
-      margin-top: 6px;
-    }
-
-    .weak-bar span {
-      display: block;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #f97316, #dc2626);
-    }
-
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+    .toolbar .count-box { width: 180px; }
+    .card-list { display: grid; gap: 12px; }
     .card {
       border: 1px solid #e5e7eb;
       border-radius: 14px;
+      background: white;
       padding: 14px;
-      background: #ffffff;
     }
-
     .card.due { border-color: #f59e0b; background: #fffbeb; }
-    .card.archived { opacity: 0.74; background: #f9fafb; }
-
-    .card-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
-
+    .card-title { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
     .card-title strong { font-size: 17px; }
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 8px 0;
-    }
-
     .tag {
       display: inline-flex;
       border-radius: 999px;
+      padding: 4px 8px;
       background: #e0e7ff;
       color: #3730a3;
       font-size: 12px;
-      font-weight: 750;
-      padding: 4px 8px;
+      font-weight: 700;
       white-space: nowrap;
     }
-
-    .tag.green { background: #dcfce7; color: #166534; }
-    .tag.orange { background: #ffedd5; color: #9a3412; }
     .tag.red { background: #fee2e2; color: #991b1b; }
-    .tag.gray { background: #f3f4f6; color: #374151; }
-
-    .meta {
-      color: #4b5563;
-      line-height: 1.75;
-      font-size: 14px;
-    }
-
-    .summary, .progress-box {
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      color: #475569;
-      padding: 10px 12px;
-      font-size: 14px;
-      line-height: 1.7;
-      margin-bottom: 12px;
-    }
-
-    .progress-bar {
-      height: 9px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-
-    .progress-bar span {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, #2563eb, #7c3aed);
-      border-radius: inherit;
-    }
-
+    .tag.orange { background: #ffedd5; color: #9a3412; }
+    .tag.green { background: #dcfce7; color: #166534; }
+    .meta { color: #4b5563; font-size: 14px; line-height: 1.8; }
     .empty {
       text-align: center;
       color: #6b7280;
-      padding: 28px 12px;
       border: 1px dashed #d1d5db;
       border-radius: 14px;
+      padding: 28px 12px;
       background: #fafafa;
     }
-
-    .notice {
-      margin-top: 10px;
-      color: #047857;
+    .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .progress {
+      border: 1px solid #e5e7eb;
+      background: #f8fafc;
+      color: #475569;
+      border-radius: 12px;
+      padding: 10px 12px;
       font-size: 14px;
-      min-height: 20px;
+      margin-bottom: 12px;
     }
-
-    .danger-text { color: #dc2626; }
-
-    @media (max-width: 980px) {
+    @media (max-width: 900px) {
       .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .layout { grid-template-columns: 1fr; }
     }
-
-    @media (max-width: 620px) {
-      header h1 { font-size: 24px; }
+    @media (max-width: 560px) {
       .stats, .row, .filters { grid-template-columns: 1fr; }
       button, .file-label { width: 100%; }
+      .toolbar .count-box { width: 100%; }
     }
-
     @media print {
-      header, .stats, .layout > div:first-child, .filters, #listSummary, .wrong-list, .no-print, .card .button-row {
-        display: none !important;
-      }
-
+      header, .stats, .layout > div:first-child, .wrong-library, .buttons, .toolbar label, .toolbar select { display: none !important; }
       body { background: white; }
       main { max-width: none; padding: 0; }
       .layout { display: block; }
-      .panel { box-shadow: none; border: 0; padding: 0; }
-      .card { break-inside: avoid; margin-bottom: 18px; min-height: 150px; }
-      .card::after {
-        content: "解题区：\\A\\A\\A";
-        white-space: pre;
-        display: block;
-        margin-top: 16px;
-        border-top: 1px dashed #9ca3af;
-        color: #6b7280;
-        padding-top: 10px;
-      }
+      .panel { box-shadow: none; border: 0; }
+      .card { break-inside: avoid; margin-bottom: 16px; min-height: 150px; }
+      .card::after { content: "解题区：\A\A\A"; white-space: pre; display: block; margin-top: 16px; border-top: 1px dashed #9ca3af; color: #6b7280; padding-top: 10px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>真题错题复盘器 V2</h1>
-    <p>错题录入、遗忘曲线、薄弱题优先、统计分析和快速复盘。</p>
+    <h1>错题随机复习生成器</h1>
+    <p>录入错题题号，系统按遗忘曲线和久未出现程度生成每日复习清单。</p>
   </header>
 
   <main>
     <section class="stats">
-      <div class="stat-card"><div class="label">总错题数</div><div class="value" id="totalCount">0</div></div>
-      <div class="stat-card"><div class="label">今日到期</div><div class="value" id="dueCount">0</div></div>
-      <div class="stat-card"><div class="label">今日抽取</div><div class="value" id="todayCount">0</div></div>
-      <div class="stat-card"><div class="label">已掌握</div><div class="value" id="masteredCount">0</div></div>
-      <div class="stat-card"><div class="label">逾期题数</div><div class="value" id="overdueCount">0</div></div>
-      <div class="stat-card"><div class="label">今日已完成</div><div class="value" id="todayDoneCount">0</div></div>
-      <div class="stat-card"><div class="label">近 7 天待复习</div><div class="value" id="weekDueCount">0</div></div>
-      <div class="stat-card"><div class="label">历史正确率</div><div class="value" id="accuracyRate">0%</div></div>
+      <div class="stat"><div class="label">错题总数</div><div class="value" id="totalCount">0</div></div>
+      <div class="stat"><div class="label">今日生成</div><div class="value" id="todayCount">0</div></div>
+      <div class="stat"><div class="label">今日已完成</div><div class="value" id="doneCount">0</div></div>
+      <div class="stat"><div class="label">已到期</div><div class="value" id="dueCount">0</div></div>
     </section>
 
     <section class="layout">
       <div>
         <section class="panel">
-          <h2>添加错题</h2>
-          <div class="mode-switch no-print">
-            <button type="button" class="soft active" id="simpleModeBtn">简单模式</button>
-            <button type="button" class="soft" id="fullModeBtn">完整模式</button>
-          </div>
-          <form id="wrongForm">
+          <h2>输入错题</h2>
+          <form id="questionForm">
             <label for="subject">科目</label>
-            <select id="subject" required>
-              <option value="数学二">数学二</option>
-              <option value="408 数据结构">408 数据结构</option>
-              <option value="408 计算机组成原理">408 计算机组成原理</option>
-              <option value="408 操作系统">408 操作系统</option>
-              <option value="408 计算机网络">408 计算机网络</option>
-              <option value="英语">英语</option>
-              <option value="政治">政治</option>
-              <option value="其他">其他</option>
-            </select>
+            <input id="subject" placeholder="如 数学二、408 操作系统、英语" required />
+
+            <label for="source">哪本书 / 哪张卷子</label>
+            <input id="source" placeholder="如 2021 真题、张宇 1000 题、王道操作系统" required />
 
             <div class="row">
               <div>
-                <label for="year">年份</label>
-                <input id="year" type="number" min="1980" max="2100" placeholder="如 2021" required />
-              </div>
-              <div>
                 <label for="number">题号</label>
-                <input id="number" placeholder="如 17" required />
+                <input id="number" placeholder="如 17、第32题" required />
+              </div>
+              <div>
+                <label for="knowledge">知识点</label>
+                <input id="knowledge" placeholder="如 极限、进程调度" required />
               </div>
             </div>
 
-            <div class="row advanced-field hidden">
-              <div>
-                <label for="type">题型</label>
-                <select id="type">
-                  <option value="选择题">选择题</option>
-                  <option value="填空题">填空题</option>
-                  <option value="解答题">解答题</option>
-                  <option value="大题">大题</option>
-                  <option value="其他">其他</option>
-                </select>
-              </div>
-              <div>
-                <label for="wrongDate">错题日期</label>
-                <input id="wrongDate" type="date" required />
-              </div>
+            <div class="buttons">
+              <button type="submit">添加错题</button>
+              <button type="button" class="soft" id="clearBtn">清空</button>
             </div>
-
-            <label for="knowledge">知识点</label>
-            <input id="knowledge" placeholder="如 极限、进程调度、特征值" />
-
-            <div class="row advanced-field hidden">
-              <div>
-                <label for="difficulty">难度</label>
-                <select id="difficulty">
-                  <option value="低">低</option>
-                  <option value="中" selected>中</option>
-                  <option value="高">高</option>
-                </select>
-              </div>
-              <div>
-                <label for="priority">优先级</label>
-                <select id="priority">
-                  <option value="普通" selected>普通</option>
-                  <option value="重点">重点</option>
-                  <option value="高频">高频</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row advanced-field hidden">
-              <div>
-                <label for="mistakeReason">错因</label>
-                <select id="mistakeReason">
-                  <option value="概念不清">概念不清</option>
-                  <option value="计算错误">计算错误</option>
-                  <option value="审题错误">审题错误</option>
-                  <option value="方法不会">方法不会</option>
-                  <option value="记忆遗漏">记忆遗漏</option>
-                  <option value="其他" selected>其他</option>
-                </select>
-              </div>
-              <div>
-                <label for="source">来源</label>
-                <select id="source">
-                  <option value="真题" selected>真题</option>
-                  <option value="模拟题">模拟题</option>
-                  <option value="课后题">课后题</option>
-                  <option value="自测">自测</option>
-                  <option value="其他">其他</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="advanced-field hidden">
-              <label for="note">备注</label>
-              <textarea id="note" placeholder="写清楚当时哪里错了，方便复盘"></textarea>
-            </div>
-
-            <div class="button-row">
-              <button type="submit" id="submitBtn">添加错题</button>
-              <button type="button" class="ghost" id="cancelEditBtn" style="display:none">取消编辑</button>
-              <button type="button" class="ghost" id="clearFormBtn">清空表单</button>
-            </div>
-            <p class="hint">连续录入时，添加后会保留科目、年份、题型和日期，只清空题号、知识点、错因与备注。</p>
             <div class="notice" id="formNotice"></div>
           </form>
         </section>
 
-        <section class="panel no-print">
-          <h2>薄弱知识点排行</h2>
-          <div id="weakKnowledgeList" class="weak-list"></div>
-        </section>
-
-        <section class="panel no-print">
-          <h2>批量导入题号</h2>
-          <label for="batchInput">每行一题</label>
-          <textarea id="batchInput" placeholder="数学二 2021 17 极限&#10;数学二 2020 22 二重积分&#10;408 操作系统 2019 32 进程调度"></textarea>
-          <div class="button-row">
-            <button id="batchImportBtn">批量导入</button>
-          </div>
-          <p class="hint">格式：科目 年份 题号 知识点。408 子科目可写成“408 操作系统 2019 32 进程调度”。</p>
-          <div class="notice" id="batchNotice"></div>
-        </section>
-
-        <section class="panel no-print">
+        <section class="panel">
           <h2>数据备份</h2>
-          <div class="alert"><strong>重要提醒：</strong>数据只保存在当前浏览器，清缓存、换浏览器或换电脑都可能丢失，请定期导出 JSON 备份。</div>
-          <div class="button-row">
-            <button class="secondary" id="exportBtn">导出 JSON</button>
-            <label class="file-label secondary" for="importFile">导入 JSON</label>
+          <div class="alert"><strong>重要：</strong>数据只保存在当前浏览器。清缓存、换浏览器或换电脑可能丢失，请定期导出 JSON。</div>
+          <div class="buttons">
+            <button class="gray" id="exportBtn">导出 JSON</button>
+            <label class="file-label" for="importFile">导入 JSON</label>
             <input id="importFile" type="file" accept="application/json,.json" />
             <button class="danger" id="clearAllBtn">清空全部</button>
           </div>
-          <p class="hint">快捷键：/ 搜索，g 生成今日题，1/2/3 分别标记第一题为会了/有点忘/不会。</p>
           <div class="notice" id="dataNotice"></div>
         </section>
       </div>
@@ -490,213 +212,133 @@
       <div>
         <section class="panel">
           <div class="toolbar">
-            <h2>今日复习</h2>
-            <div class="button-row no-print" style="margin-top:0">
-              <button id="generateBtn">生成今日 10 题</button>
-              <button class="ghost" id="printBtn">打印清单</button>
+            <h2>每日生成</h2>
+            <div class="count-box">
+              <label for="generateCount">生成数量</label>
+              <select id="generateCount">
+                <option value="5">5 道</option>
+                <option value="10" selected>10 道</option>
+                <option value="15">15 道</option>
+                <option value="20">20 道</option>
+              </select>
+            </div>
+            <div class="buttons">
+              <button id="generateBtn">生成错题</button>
+              <button class="soft" id="printBtn">打印</button>
             </div>
           </div>
-          <div id="reviewProgress" class="progress-box"></div>
-          <div id="reviewList" class="review-grid"></div>
+          <div class="progress" id="progressBox">今日进度：0 / 0</div>
+          <div id="todayList" class="card-list"></div>
         </section>
 
-        <section class="panel no-print">
-          <div class="toolbar">
-            <h2>错题列表</h2>
-          </div>
+        <section class="panel wrong-library">
+          <h2>错题库</h2>
           <div class="filters">
-            <select id="filterSubject"><option value="">全部科目</option></select>
-            <select id="filterStatus">
-              <option value="">全部状态</option>
-              <option value="未掌握">未掌握</option>
-              <option value="有点忘">有点忘</option>
-              <option value="复习中">复习中</option>
-              <option value="已掌握">已掌握</option>
-            </select>
-            <select id="filterDue">
-              <option value="">全部到期</option>
-              <option value="due">今日到期</option>
-              <option value="overdue">已逾期</option>
-              <option value="future">未来待复习</option>
-              <option value="archived">已归档</option>
-            </select>
-            <select id="filterType">
-              <option value="">全部题型</option>
-              <option value="选择题">选择题</option>
-              <option value="填空题">填空题</option>
-              <option value="解答题">解答题</option>
-              <option value="大题">大题</option>
-              <option value="其他">其他</option>
-            </select>
-            <select id="filterReason">
-              <option value="">全部错因</option>
-              <option value="概念不清">概念不清</option>
-              <option value="计算错误">计算错误</option>
-              <option value="审题错误">审题错误</option>
-              <option value="方法不会">方法不会</option>
-              <option value="记忆遗漏">记忆遗漏</option>
-              <option value="其他">其他</option>
-            </select>
+            <input id="searchInput" placeholder="搜索科目 / 书卷 / 题号 / 知识点" />
             <select id="sortBy">
-              <option value="nextDate">下次复习最近</option>
-              <option value="wrongCount">做错次数最多</option>
-              <option value="reviewCount">复习次数最少</option>
-              <option value="createdAt">新增时间最新</option>
-              <option value="priority">优先级最高</option>
+              <option value="priority">优先复习排序</option>
+              <option value="oldest">最久未生成</option>
+              <option value="wrong">不会次数最多</option>
+              <option value="newest">最新录入</option>
             </select>
-            <input id="searchInput" placeholder="搜索年份 / 题号 / 知识点 / 备注" />
           </div>
-          <div id="listSummary" class="summary"></div>
-          <div id="wrongList" class="wrong-list"></div>
+          <div id="libraryList" class="card-list"></div>
         </section>
       </div>
     </section>
   </main>
 
   <script>
-    const STORAGE_KEY = "wrong-question-review-v1";
-    const TODAY_SET_KEY = "wrong-question-review-today-set-v1";
-    const intervals = [2, 4, 7, 15, 30, 60];
-    const resultText = { known: "会了", blur: "有点忘", wrong: "不会", skip: "跳过" };
+    const STORAGE_KEY = "wrong-question-simple-v1";
+    const OLD_STORAGE_KEY = "wrong-question-review-v1";
+    const TODAY_KEY = "wrong-question-simple-today-v1";
+    const intervals = [1, 2, 4, 7, 15, 30, 60];
 
-    let wrongQuestions = loadQuestions();
+    let questions = loadQuestions();
     let todaySet = loadTodaySet();
-    let editingId = null;
-    let formMode = localStorage.getItem("wrong-question-form-mode") || "simple";
 
-    const form = document.getElementById("wrongForm");
-    const simpleModeBtn = document.getElementById("simpleModeBtn");
-    const fullModeBtn = document.getElementById("fullModeBtn");
+    const form = document.getElementById("questionForm");
     const subjectEl = document.getElementById("subject");
-    const yearEl = document.getElementById("year");
-    const numberEl = document.getElementById("number");
-    const typeEl = document.getElementById("type");
-    const wrongDateEl = document.getElementById("wrongDate");
-    const knowledgeEl = document.getElementById("knowledge");
-    const difficultyEl = document.getElementById("difficulty");
-    const priorityEl = document.getElementById("priority");
-    const mistakeReasonEl = document.getElementById("mistakeReason");
     const sourceEl = document.getElementById("source");
-    const noteEl = document.getElementById("note");
-    const submitBtn = document.getElementById("submitBtn");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const numberEl = document.getElementById("number");
+    const knowledgeEl = document.getElementById("knowledge");
     const formNotice = document.getElementById("formNotice");
-    const batchInput = document.getElementById("batchInput");
-    const batchNotice = document.getElementById("batchNotice");
     const dataNotice = document.getElementById("dataNotice");
-    const weakKnowledgeList = document.getElementById("weakKnowledgeList");
-    const reviewProgress = document.getElementById("reviewProgress");
-    const reviewList = document.getElementById("reviewList");
-    const wrongList = document.getElementById("wrongList");
-    const listSummary = document.getElementById("listSummary");
-    const filterSubject = document.getElementById("filterSubject");
-    const filterStatus = document.getElementById("filterStatus");
-    const filterDue = document.getElementById("filterDue");
-    const filterType = document.getElementById("filterType");
-    const filterReason = document.getElementById("filterReason");
-    const sortBy = document.getElementById("sortBy");
+    const generateCountEl = document.getElementById("generateCount");
+    const progressBox = document.getElementById("progressBox");
+    const todayList = document.getElementById("todayList");
+    const libraryList = document.getElementById("libraryList");
     const searchInput = document.getElementById("searchInput");
+    const sortBy = document.getElementById("sortBy");
 
-    wrongDateEl.value = formatDate(new Date());
-    applyFormMode(formMode);
-
-    simpleModeBtn.addEventListener("click", () => applyFormMode("simple"));
-    fullModeBtn.addEventListener("click", () => applyFormMode("full"));
-
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", event => {
       event.preventDefault();
-      const wasEditing = Boolean(editingId);
-      const preserved = {
-        subject: subjectEl.value,
-        year: yearEl.value.trim(),
-        type: typeEl.value,
-        wrongDate: wrongDateEl.value || formatDate(new Date())
-      };
-      if (editingId) {
-        if (!updateEditingQuestion(preserved)) return;
-      } else {
-        const duplicate = findDuplicateQuestion(preserved.subject, preserved.year, numberEl.value.trim());
-        if (duplicate && !confirm("这道题已经录入过了，是否继续添加？")) return;
-        const question = normalizeQuestion({
-          version: 2,
-          subject: preserved.subject,
-          year: preserved.year,
-          number: numberEl.value.trim(),
-          type: preserved.type,
-          knowledge: knowledgeEl.value.trim(),
-          difficulty: difficultyEl.value,
-          priority: priorityEl.value,
-          mistakeReason: mistakeReasonEl.value,
-          source: sourceEl.value,
-          note: noteEl.value.trim(),
-          wrongDate: preserved.wrongDate,
-          reviewCount: 0,
-          wrongCount: 1,
-          lastReviewDate: null,
-          nextReviewDate: addDays(preserved.wrongDate, 1),
-          status: "未掌握",
-          createdAt: new Date().toISOString()
-        });
-        wrongQuestions.unshift(question);
-      }
+      const subject = subjectEl.value.trim();
+      const source = sourceEl.value.trim();
+      const number = normalizeNumber(numberEl.value);
+      const knowledge = knowledgeEl.value.trim();
 
+      const duplicate = questions.find(item => item.subject === subject && item.source === source && normalizeNumber(item.number) === number);
+      if (duplicate && !confirm("这道错题已经存在，是否仍然添加？")) return;
+
+      questions.unshift(normalizeQuestion({
+        id: createId(),
+        subject,
+        source,
+        number,
+        knowledge,
+        createdAt: new Date().toISOString(),
+        lastGeneratedDate: null,
+        nextReviewDate: addDays(today(), 1),
+        reviewCount: 0,
+        wrongCount: 0,
+        consecutiveKnown: 0
+      }));
       saveQuestions();
       renderAll();
-      subjectEl.value = preserved.subject;
-      yearEl.value = preserved.year;
-      typeEl.value = preserved.type;
-      wrongDateEl.value = preserved.wrongDate;
       numberEl.value = "";
       knowledgeEl.value = "";
-      difficultyEl.value = "中";
-      priorityEl.value = "普通";
-      mistakeReasonEl.value = "其他";
-      sourceEl.value = "真题";
-      noteEl.value = "";
       numberEl.focus();
-      exitEditMode();
-      showNotice(formNotice, wasEditing ? "错题已保存。" : "已添加错题，并保留本套卷子的基础信息。", false);
+      showNotice(formNotice, "已添加错题，明天开始进入复习池。", false);
     });
 
-    document.getElementById("clearFormBtn").addEventListener("click", () => {
+    document.getElementById("clearBtn").addEventListener("click", () => {
       form.reset();
-      wrongDateEl.value = formatDate(new Date());
-      difficultyEl.value = "中";
-      priorityEl.value = "普通";
-      mistakeReasonEl.value = "其他";
-      sourceEl.value = "真题";
-      exitEditMode();
-      showNotice(formNotice, "表单已清空。", false);
+      showNotice(formNotice, "已清空输入框。", false);
     });
 
-    cancelEditBtn.addEventListener("click", () => {
-      form.reset();
-      wrongDateEl.value = formatDate(new Date());
-      difficultyEl.value = "中";
-      priorityEl.value = "普通";
-      mistakeReasonEl.value = "其他";
-      sourceEl.value = "真题";
-      exitEditMode();
-      showNotice(formNotice, "已取消编辑。", false);
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      if (todaySet.ids.length && !confirm("今日清单还没有完成，是否重新生成？")) return;
+      const count = Number(generateCountEl.value || 10);
+      const selected = pickQuestions(count);
+      const date = today();
+      selected.forEach(item => {
+        item.lastGeneratedDate = date;
+        item.generatedCount += 1;
+      });
+      todaySet = { date, ids: selected.map(item => item.id), initialCount: selected.length };
+      saveQuestions();
+      saveTodaySet();
+      renderAll();
+      showNotice(dataNotice, selected.length ? `已生成 ${selected.length} 道错题。` : "暂无可生成的错题。", false);
     });
 
-    document.getElementById("generateBtn").addEventListener("click", generateTodayQuestions);
     document.getElementById("printBtn").addEventListener("click", () => window.print());
-    document.getElementById("batchImportBtn").addEventListener("click", importBatchQuestions);
+    searchInput.addEventListener("input", renderLibrary);
+    sortBy.addEventListener("change", renderLibrary);
 
     document.getElementById("exportBtn").addEventListener("click", () => {
-      const payload = { version: 2, exportedAt: new Date().toISOString(), questions: wrongQuestions };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), questions }, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `错题复盘器V2备份-${formatDate(new Date())}.json`;
+      link.download = `错题随机复习备份-${today()}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      showNotice(dataNotice, "已导出 V2 JSON 备份文件。", false);
+      showNotice(dataNotice, "已导出 JSON 备份。", false);
     });
 
-    document.getElementById("importFile").addEventListener("change", (event) => {
+    document.getElementById("importFile").addEventListener("change", event => {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -704,15 +346,15 @@
         try {
           const parsed = JSON.parse(reader.result);
           const imported = Array.isArray(parsed) ? parsed : parsed.questions;
-          if (!Array.isArray(imported)) throw new Error("格式不正确");
-          wrongQuestions = imported.map(normalizeQuestion);
-          todaySet = { date: formatDate(new Date()), ids: [], initialCount: 0 };
+          if (!Array.isArray(imported)) throw new Error("invalid");
+          questions = imported.map(normalizeQuestion);
+          todaySet = { date: today(), ids: [], initialCount: 0 };
           saveQuestions();
           saveTodaySet();
           renderAll();
-          showNotice(dataNotice, `导入成功，共 ${wrongQuestions.length} 道错题。`, false);
+          showNotice(dataNotice, `导入成功，共 ${questions.length} 道错题。`, false);
         } catch (error) {
-          showNotice(dataNotice, "导入失败：请选择正确的 JSON 备份文件。", true);
+          showNotice(dataNotice, "导入失败，请选择正确的 JSON 文件。", true);
         } finally {
           event.target.value = "";
         }
@@ -722,368 +364,134 @@
 
     document.getElementById("clearAllBtn").addEventListener("click", () => {
       if (!confirm("确定清空全部错题吗？建议先导出备份。")) return;
-      wrongQuestions = [];
-      todaySet = { date: formatDate(new Date()), ids: [], initialCount: 0 };
+      questions = [];
+      todaySet = { date: today(), ids: [], initialCount: 0 };
       saveQuestions();
       saveTodaySet();
       renderAll();
       showNotice(dataNotice, "全部数据已清空。", false);
     });
 
-    [filterSubject, filterStatus, filterDue, filterType, filterReason, sortBy].forEach(element => {
-      element.addEventListener("change", renderWrongList);
-    });
-    searchInput.addEventListener("input", renderWrongList);
-    document.addEventListener("keydown", handleShortcut);
-
     function loadQuestions() {
+      const current = localStorage.getItem(STORAGE_KEY);
+      if (current) {
+        try { return JSON.parse(current).map(normalizeQuestion); } catch (error) { return []; }
+      }
+      const old = localStorage.getItem(OLD_STORAGE_KEY);
+      if (!old) return [];
       try {
-        const loaded = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeQuestion);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
-        return loaded;
+        const oldItems = JSON.parse(old);
+        const migrated = oldItems.map(item => normalizeQuestion({
+          subject: item.subject,
+          source: item.source || item.type || "旧数据",
+          number: item.number,
+          knowledge: item.knowledge,
+          createdAt: item.createdAt,
+          lastGeneratedDate: item.lastReviewDate,
+          nextReviewDate: item.nextReviewDate,
+          reviewCount: item.reviewCount,
+          wrongCount: item.wrongCount,
+          consecutiveKnown: item.streak || 0
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
       } catch (error) {
         return [];
       }
     }
 
     function saveQuestions() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(wrongQuestions));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
     }
 
     function loadTodaySet() {
       try {
-        const saved = JSON.parse(localStorage.getItem(TODAY_SET_KEY) || "null");
-        if (saved && saved.date === formatDate(new Date()) && Array.isArray(saved.ids)) {
-          return {
-            date: saved.date,
-            ids: saved.ids,
-            initialCount: Number(saved.initialCount || saved.ids.length)
-          };
+        const saved = JSON.parse(localStorage.getItem(TODAY_KEY) || "null");
+        if (saved && saved.date === today() && Array.isArray(saved.ids)) {
+          return { date: saved.date, ids: saved.ids, initialCount: Number(saved.initialCount || saved.ids.length) };
         }
       } catch (error) {}
-      return { date: formatDate(new Date()), ids: [], initialCount: 0 };
+      return { date: today(), ids: [], initialCount: 0 };
     }
 
     function saveTodaySet() {
-      localStorage.setItem(TODAY_SET_KEY, JSON.stringify(todaySet));
-    }
-
-    function applyFormMode(mode) {
-      formMode = mode;
-      localStorage.setItem("wrong-question-form-mode", mode);
-      const isSimple = mode === "simple";
-      document.querySelectorAll(".advanced-field").forEach(element => element.classList.toggle("hidden", isSimple));
-      simpleModeBtn.classList.toggle("active", isSimple);
-      fullModeBtn.classList.toggle("active", !isSimple);
-    }
-
-    function updateEditingQuestion(preserved) {
-      const question = wrongQuestions.find(item => item.id === editingId);
-      if (!question) return false;
-      const duplicate = findDuplicateQuestion(preserved.subject, preserved.year, numberEl.value.trim(), editingId);
-      if (duplicate && !confirm("这道题和已有记录重复，是否仍然保存？")) return false;
-      question.subject = preserved.subject;
-      question.year = preserved.year;
-      question.number = numberEl.value.trim();
-      question.type = preserved.type;
-      question.knowledge = knowledgeEl.value.trim();
-      question.difficulty = difficultyEl.value;
-      question.priority = priorityEl.value;
-      question.mistakeReason = mistakeReasonEl.value;
-      question.source = sourceEl.value;
-      question.note = noteEl.value.trim();
-      question.wrongDate = preserved.wrongDate;
-      return true;
-    }
-
-    function fillEditForm(id) {
-      const question = wrongQuestions.find(item => item.id === id);
-      if (!question) return;
-      editingId = id;
-      subjectEl.value = question.subject;
-      yearEl.value = question.year;
-      numberEl.value = question.number;
-      typeEl.value = question.type;
-      wrongDateEl.value = question.wrongDate;
-      knowledgeEl.value = question.knowledge;
-      difficultyEl.value = question.difficulty;
-      priorityEl.value = question.priority;
-      mistakeReasonEl.value = question.mistakeReason;
-      sourceEl.value = question.source;
-      noteEl.value = question.note;
-      submitBtn.textContent = "保存修改";
-      cancelEditBtn.style.display = "inline-flex";
-      applyFormMode("full");
-      form.scrollIntoView({ behavior: "smooth", block: "start" });
-      showNotice(formNotice, "正在编辑错题，修改后点“保存修改”。", false);
-    }
-
-    function exitEditMode() {
-      editingId = null;
-      submitBtn.textContent = "添加错题";
-      cancelEditBtn.style.display = "none";
-    }
-
-    function findDuplicateQuestion(subject, year, number, ignoreId = null) {
-      return wrongQuestions.find(item =>
-        item.id !== ignoreId &&
-        item.subject === subject &&
-        item.year === String(year) &&
-        normalizeQuestionNumber(item.number) === normalizeQuestionNumber(number)
-      );
-    }
-
-    function importBatchQuestions() {
-      const lines = batchInput.value.split(/\n+/).map(line => line.trim()).filter(Boolean);
-      if (!lines.length) {
-        showNotice(batchNotice, "请先粘贴要导入的题号。", true);
-        return;
-      }
-
-      let added = 0;
-      let skipped = 0;
-      const duplicates = [];
-      const today = formatDate(new Date());
-      const staged = [];
-
-      for (const line of lines) {
-        const parsed = parseBatchLine(line);
-        if (!parsed) {
-          skipped += 1;
-          continue;
-        }
-        const duplicateInSaved = findDuplicateQuestion(parsed.subject, parsed.year, parsed.number);
-        const duplicateInStaged = staged.some(item => item.subject === parsed.subject && item.year === parsed.year && normalizeQuestionNumber(item.number) === normalizeQuestionNumber(parsed.number));
-        if (duplicateInSaved || duplicateInStaged) {
-          duplicates.push(`${parsed.subject} ${parsed.year} 第${parsed.number}题`);
-          skipped += 1;
-          continue;
-        }
-        staged.push(normalizeQuestion({
-          version: 2,
-          subject: parsed.subject,
-          year: parsed.year,
-          number: parsed.number,
-          type: "其他",
-          knowledge: parsed.knowledge,
-          difficulty: "中",
-          priority: "普通",
-          mistakeReason: "其他",
-          source: "真题",
-          note: "",
-          wrongDate: today,
-          reviewCount: 0,
-          wrongCount: 1,
-          lastReviewDate: null,
-          nextReviewDate: addDays(today, 1),
-          status: "未掌握",
-          createdAt: new Date().toISOString()
-        }));
-        added += 1;
-      }
-
-      wrongQuestions = [...staged.reverse(), ...wrongQuestions];
-      saveQuestions();
-      renderAll();
-      if (added) batchInput.value = "";
-      const duplicateText = duplicates.length ? `重复跳过：${duplicates.slice(0, 5).join("、")}${duplicates.length > 5 ? " 等" : ""}。` : "";
-      showNotice(batchNotice, `导入 ${added} 道，跳过 ${skipped} 行。${duplicateText}`, skipped && !added);
-    }
-
-    function parseBatchLine(line) {
-      const parts = line.split(/\s+/).filter(Boolean);
-      if (parts.length < 3) return null;
-      let subject = parts[0];
-      let yearIndex = 1;
-      if (parts[0] === "408" && parts.length >= 4 && !/^\d{4}$/.test(parts[1])) {
-        subject = `${parts[0]} ${parts[1]}`;
-        yearIndex = 2;
-      }
-      const year = parts[yearIndex];
-      const number = parts[yearIndex + 1];
-      if (!/^\d{4}$/.test(year) || !number) return null;
-      return {
-        subject,
-        year,
-        number: normalizeQuestionNumber(number),
-        knowledge: parts.slice(yearIndex + 2).join(" ")
-      };
-    }
-
-    function normalizeQuestionNumber(number) {
-      return String(number || "").trim().replace(/^第/, "").replace(/题$/, "");
+      localStorage.setItem(TODAY_KEY, JSON.stringify(todaySet));
     }
 
     function normalizeQuestion(item) {
-      const wrongDate = item.wrongDate || formatDate(new Date());
       return {
         id: item.id || createId(),
-        version: 2,
-        subject: item.subject || "其他",
-        year: String(item.year || ""),
-        number: String(item.number || ""),
-        type: item.type || "其他",
-        knowledge: item.knowledge || "",
-        difficulty: item.difficulty || "中",
-        mistakeReason: item.mistakeReason || "其他",
-        source: item.source || "真题",
-        priority: item.priority || "普通",
-        note: item.note || "",
-        wrongDate,
+        subject: item.subject || "未分类",
+        source: item.source || "未填写",
+        number: normalizeNumber(item.number || ""),
+        knowledge: item.knowledge || "未填写",
+        createdAt: item.createdAt || new Date().toISOString(),
+        lastGeneratedDate: item.lastGeneratedDate || null,
+        nextReviewDate: item.nextReviewDate || addDays(today(), 1),
         reviewCount: Number(item.reviewCount || 0),
-        wrongCount: Number(item.wrongCount || 1),
-        lastReviewDate: item.lastReviewDate || null,
-        nextReviewDate: item.nextReviewDate || addDays(wrongDate, 1),
-        status: item.status || "未掌握",
-        lastResult: item.lastResult || "",
-        history: Array.isArray(item.history) ? item.history : [],
-        easeFactor: clamp(Number(item.easeFactor || 2.5), 1.3, 3),
-        streak: Number(item.streak || 0),
-        archived: Boolean(item.archived),
-        createdAt: item.createdAt || new Date().toISOString()
+        wrongCount: Number(item.wrongCount || 0),
+        generatedCount: Number(item.generatedCount || 0),
+        consecutiveKnown: Number(item.consecutiveKnown || 0)
       };
     }
 
-    function generateTodayQuestions() {
-      if (todaySet.ids.length && !confirm("今日清单还没清空，是否重新生成并覆盖？")) return;
-      const selected = pickTodayQuestions();
-      todaySet = { date: formatDate(new Date()), ids: selected.map(item => item.id), initialCount: selected.length };
-      saveTodaySet();
-      renderAll();
-      showNotice(dataNotice, selected.length ? `已生成今日 ${selected.length} 道题。` : "还没有可复习的错题。", false);
-    }
-
-    function pickTodayQuestions() {
-      const today = formatDate(new Date());
-      return wrongQuestions
-        .filter(item => !item.archived && item.status !== "已掌握")
-        .map(item => ({ ...item, score: getQuestionScore(item, today) }))
+    function pickQuestions(count) {
+      const current = today();
+      return questions
+        .map(item => ({ ...item, score: getScore(item, current) }))
         .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
+        .slice(0, count)
+        .map(scored => questions.find(item => item.id === scored.id));
     }
 
-    function getQuestionScore(item, today) {
-      const overdueDays = Math.max(0, daysBetween(item.nextReviewDate, today));
-      const dueScore = item.nextReviewDate <= today ? 1000 : 0;
-      const wrongScore = item.wrongCount * 15;
-      const reviewScore = Math.max(0, 60 - item.reviewCount * 5);
-      const priorityScore = item.priority === "高频" ? 90 : item.priority === "重点" ? 55 : 0;
-      const difficultyScore = item.difficulty === "高" ? 45 : item.difficulty === "中" ? 20 : 0;
-      const reasonScore = ["方法不会", "概念不清", "记忆遗漏"].includes(item.mistakeReason) ? 25 : 0;
-      const statusScore = item.status === "未掌握" ? 80 : item.status === "有点忘" ? 50 : item.status === "已掌握" ? -90 : 0;
-      return dueScore + overdueDays * 35 + wrongScore + reviewScore + priorityScore + difficultyScore + reasonScore + statusScore + Math.random();
+    function getScore(item, current) {
+      const overdueDays = Math.max(0, daysBetween(item.nextReviewDate, current));
+      const lastGeneratedGap = item.lastGeneratedDate ? Math.max(0, daysBetween(item.lastGeneratedDate, current)) : 30;
+      const dueScore = item.nextReviewDate <= current ? 1000 : 0;
+      const wrongScore = item.wrongCount * 80;
+      const neverScore = item.generatedCount === 0 ? 160 : 0;
+      const knownPenalty = item.consecutiveKnown * 90;
+      return dueScore + overdueDays * 45 + lastGeneratedGap * 18 + wrongScore + neverScore - knownPenalty + Math.random();
     }
 
-    function markReview(id, result) {
-      const question = wrongQuestions.find(item => item.id === id);
-      if (!question) return;
-      const today = formatDate(new Date());
-      const oldNextReviewDate = question.nextReviewDate;
-
-      question.lastReviewDate = today;
-      question.lastResult = resultText[result];
-
-      if (result === "known") {
-        question.reviewCount += 1;
-        question.streak += 1;
-        question.easeFactor = clamp(question.easeFactor + 0.1, 1.3, 3);
-        question.status = question.streak >= 5 || question.reviewCount >= 5 ? "已掌握" : "复习中";
-      }
-
-      if (result === "blur") {
-        question.streak = 0;
-        question.easeFactor = clamp(question.easeFactor - 0.15, 1.3, 3);
-        question.status = "有点忘";
-      }
-
-      if (result === "wrong") {
-        question.reviewCount = Math.max(0, question.reviewCount - 1);
-        question.wrongCount += 1;
-        question.streak = 0;
-        question.easeFactor = clamp(question.easeFactor - 0.25, 1.3, 3);
-        question.status = "未掌握";
-      }
-
-      question.nextReviewDate = calculateNextReviewDate(question, result, today);
-      recordReviewHistory(question, result, today, oldNextReviewDate);
-      todaySet.ids = todaySet.ids.filter(itemId => itemId !== id);
-      saveQuestions();
-      saveTodaySet();
-      renderAll();
-    }
-
-    function calculateNextReviewDate(question, result, today) {
-      if (result === "wrong") return addDays(today, 1);
-      const baseIndex = Math.max(0, Math.min(question.reviewCount - 1, intervals.length - 1));
-      const base = intervals[baseIndex] || 1;
-      if (result === "blur") return addDays(today, Math.max(1, Math.ceil(base * 0.5)));
-      const multiplier = getDifficultyMultiplier(question.difficulty) * getPriorityMultiplier(question.priority) * (question.easeFactor / 2.5);
-      return addDays(today, Math.max(1, Math.round(base * multiplier)));
-    }
-
-    function getDifficultyMultiplier(difficulty) {
-      if (difficulty === "高") return 0.75;
-      if (difficulty === "低") return 1.2;
-      return 1;
-    }
-
-    function getPriorityMultiplier(priority) {
-      if (priority === "高频") return 0.75;
-      if (priority === "重点") return 0.85;
-      return 1;
-    }
-
-    function recordReviewHistory(question, result, today, oldNextReviewDate) {
-      question.history.push({
-        date: today,
-        result,
-        resultText: resultText[result],
-        reviewCount: question.reviewCount,
-        wrongCount: question.wrongCount,
-        nextReviewDate: question.nextReviewDate,
-        previousNextReviewDate: oldNextReviewDate
-      });
-    }
-
-    function skipTodayQuestion(id) {
-      todaySet.ids = todaySet.ids.filter(itemId => itemId !== id);
-      saveTodaySet();
-      renderAll();
-    }
-
-    function addToToday(id) {
-      if (todaySet.ids.includes(id)) return;
-      if (todaySet.ids.length >= 10) {
-        showNotice(dataNotice, "今日清单最多 10 道，请先完成或跳过一道。", true);
+    function markKnown(id) {
+      const item = questions.find(question => question.id === id);
+      if (!item) return;
+      item.reviewCount += 1;
+      item.consecutiveKnown += 1;
+      if (item.consecutiveKnown >= 3) {
+        questions = questions.filter(question => question.id !== id);
+        todaySet.ids = todaySet.ids.filter(questionId => questionId !== id);
+        saveQuestions();
+        saveTodaySet();
+        renderAll();
+        alert(`“${item.subject}｜${item.source}｜第 ${item.number} 题”已经连续 3 次会了，已自动从错题库删除。`);
         return;
       }
-      todaySet.ids.push(id);
-      saveTodaySet();
-      renderAll();
-    }
-
-    function archiveQuestion(id) {
-      const question = wrongQuestions.find(item => item.id === id);
-      if (!question) return;
-      question.archived = true;
-      todaySet.ids = todaySet.ids.filter(itemId => itemId !== id);
+      const interval = intervals[Math.min(item.reviewCount, intervals.length - 1)];
+      item.nextReviewDate = addDays(today(), interval);
+      todaySet.ids = todaySet.ids.filter(questionId => questionId !== id);
       saveQuestions();
       saveTodaySet();
       renderAll();
     }
 
-    function restoreQuestion(id) {
-      const question = wrongQuestions.find(item => item.id === id);
-      if (!question) return;
-      question.archived = false;
+    function markWrong(id) {
+      const item = questions.find(question => question.id === id);
+      if (!item) return;
+      item.wrongCount += 1;
+      item.consecutiveKnown = 0;
+      item.nextReviewDate = addDays(today(), 1);
+      todaySet.ids = todaySet.ids.filter(questionId => questionId !== id);
       saveQuestions();
+      saveTodaySet();
       renderAll();
     }
 
-    function deleteQuestion(id) {
-      if (!confirm("确定永久删除这道错题吗？建议优先使用归档。")) return;
-      wrongQuestions = wrongQuestions.filter(item => item.id !== id);
-      todaySet.ids = todaySet.ids.filter(itemId => itemId !== id);
+    function removeQuestion(id) {
+      if (!confirm("确定删除这道错题吗？")) return;
+      questions = questions.filter(item => item.id !== id);
+      todaySet.ids = todaySet.ids.filter(questionId => questionId !== id);
       saveQuestions();
       saveTodaySet();
       renderAll();
@@ -1091,238 +499,81 @@
 
     function renderAll() {
       renderStats();
-      renderSubjectFilter();
-      renderWeakKnowledge();
-      renderReviewList();
-      renderWrongList();
-    }
-
-    function getQuestionStats() {
-      const today = formatDate(new Date());
-      const active = wrongQuestions.filter(item => !item.archived);
-      const allHistory = wrongQuestions.flatMap(item => item.history || []);
-      const weekEnd = addDays(today, 7);
-      return {
-        total: wrongQuestions.length,
-        due: active.filter(item => item.nextReviewDate <= today).length,
-        today: todaySet.ids.length,
-        mastered: wrongQuestions.filter(item => item.status === "已掌握").length,
-        overdue: active.filter(item => item.nextReviewDate < today).length,
-        todayDone: allHistory.filter(item => item.date === today).length,
-        weekDue: active.filter(item => item.nextReviewDate <= weekEnd).length,
-        accuracy: getAccuracyRate(allHistory)
-      };
-    }
-
-    function getAccuracyRate(history) {
-      const valid = history.filter(item => ["known", "blur", "wrong"].includes(item.result));
-      if (!valid.length) return 0;
-      return Math.round(valid.filter(item => item.result === "known").length / valid.length * 100);
-    }
-
-    function getRecentHistory(days) {
-      const today = formatDate(new Date());
-      const start = addDays(today, -days + 1);
-      return wrongQuestions.flatMap(item => item.history || []).filter(item => item.date >= start && item.date <= today);
-    }
-
-    function getDueStatus(item, today) {
-      if (item.archived) return { text: "已归档", className: "gray" };
-      if (item.nextReviewDate < today) return { text: `已逾期 ${daysBetween(item.nextReviewDate, today)} 天`, className: "red" };
-      if (item.nextReviewDate === today) return { text: "今日到期", className: "orange" };
-      return { text: `${daysBetween(today, item.nextReviewDate)} 天后复习`, className: "green" };
+      renderToday();
+      renderLibrary();
     }
 
     function renderStats() {
-      const stats = getQuestionStats();
-      document.getElementById("totalCount").textContent = stats.total;
-      document.getElementById("dueCount").textContent = stats.due;
-      document.getElementById("todayCount").textContent = stats.today;
-      document.getElementById("masteredCount").textContent = stats.mastered;
-      document.getElementById("overdueCount").textContent = stats.overdue;
-      document.getElementById("todayDoneCount").textContent = stats.todayDone;
-      document.getElementById("weekDueCount").textContent = stats.weekDue;
-      document.getElementById("accuracyRate").textContent = `${stats.accuracy}%`;
+      const current = today();
+      const done = Math.max(0, Number(todaySet.initialCount || 0) - todaySet.ids.length);
+      document.getElementById("totalCount").textContent = questions.length;
+      document.getElementById("todayCount").textContent = todaySet.initialCount || todaySet.ids.length;
+      document.getElementById("doneCount").textContent = done;
+      document.getElementById("dueCount").textContent = questions.filter(item => item.nextReviewDate <= current).length;
     }
 
-    function renderSubjectFilter() {
-      const current = filterSubject.value;
-      const subjects = [...new Set(wrongQuestions.map(item => item.subject))].sort();
-      filterSubject.innerHTML = `<option value="">全部科目</option>${subjects.map(subject => `<option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>`).join("")}`;
-      filterSubject.value = subjects.includes(current) ? current : "";
-    }
-
-    function renderWeakKnowledge() {
-      const counts = new Map();
-      wrongQuestions
-        .filter(item => !item.archived && item.status !== "已掌握" && item.knowledge.trim())
-        .forEach(item => {
-          const keys = item.knowledge.split(/[、,，/\\s]+/).map(key => key.trim()).filter(Boolean);
-          keys.forEach(key => counts.set(key, (counts.get(key) || 0) + 1));
-        });
-      const ranking = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
-      if (!ranking.length) {
-        weakKnowledgeList.innerHTML = `<div class="empty">录入知识点后，这里会显示薄弱排行。</div>`;
-        return;
-      }
-      const max = ranking[0][1];
-      weakKnowledgeList.innerHTML = ranking.map(([name, count], index) => `
-        <div class="weak-item">
-          <strong>${index + 1}</strong>
-          <div>
-            ${escapeHtml(name)}
-            <div class="weak-bar"><span style="width:${Math.max(12, Math.round(count / max * 100))}%"></span></div>
-          </div>
-          <strong>${count} 道</strong>
-        </div>
-      `).join("");
-    }
-
-    function renderReviewList() {
-      const items = todaySet.ids.map(id => wrongQuestions.find(item => item.id === id)).filter(Boolean);
+    function renderToday() {
+      const items = todaySet.ids.map(id => questions.find(item => item.id === id)).filter(Boolean);
       const total = Math.max(Number(todaySet.initialCount || 0), items.length);
-      const done = total ? total - items.length : 0;
-      const percent = total ? Math.round(done / total * 100) : 0;
-
-      reviewProgress.innerHTML = `今日进度：已完成 ${done} / ${total || 0} 道。<div class="progress-bar"><span style="width:${percent}%"></span></div>`;
-
+      const done = total - items.length;
+      progressBox.textContent = `今日进度：${done} / ${total}`;
       if (!items.length) {
-        reviewList.innerHTML = `<div class="empty">今天还没有复习清单，点击“生成今日 10 题”。</div>`;
+        todayList.innerHTML = `<div class="empty">还没有生成今日错题，选择数量后点击“生成错题”。</div>`;
         return;
       }
-
-      const today = formatDate(new Date());
-      reviewList.innerHTML = items.map((item, index) => {
-        const due = getDueStatus(item, today);
-        return `
-          <article class="card due">
-            <div class="card-title">
-              <strong>今日第 ${index + 1} 题：${escapeHtml(item.subject)} ${escapeHtml(item.year)} 年 第 ${escapeHtml(item.number)} 题</strong>
-              <span class="tag ${due.className}">${escapeHtml(due.text)}</span>
-            </div>
-            <div class="tags">
-              <span class="tag">${escapeHtml(item.status)}</span>
-              <span class="tag gray">${escapeHtml(item.type)}</span>
-              <span class="tag ${item.difficulty === "高" ? "red" : item.difficulty === "低" ? "green" : "orange"}">难度：${escapeHtml(item.difficulty)}</span>
-              <span class="tag ${item.priority === "高频" ? "red" : item.priority === "重点" ? "orange" : "gray"}">${escapeHtml(item.priority)}</span>
-              <span class="tag gray">错因：${escapeHtml(item.mistakeReason)}</span>
-            </div>
-            <div class="meta">
-              知识点：${escapeHtml(item.knowledge || "未填写")}<br />
-              备注：${escapeHtml(item.note || "无")}<br />
-              连续会了：${item.streak} ｜ 复习次数：${item.reviewCount} ｜ 做错次数：${item.wrongCount} ｜ 上次结果：${escapeHtml(item.lastResult || "无")}
-            </div>
-            <div class="button-row no-print">
-              <button class="success" onclick="markReview('${item.id}', 'known')">会了</button>
-              <button class="warning" onclick="markReview('${item.id}', 'blur')">有点忘</button>
-              <button class="danger" onclick="markReview('${item.id}', 'wrong')">不会</button>
-              <button class="soft" onclick="skipTodayQuestion('${item.id}')">跳过</button>
-            </div>
-          </article>
-        `;
-      }).join("");
+      todayList.innerHTML = items.map((item, index) => renderQuestionCard(item, index + 1, true)).join("");
     }
 
-    function renderWrongList() {
+    function renderLibrary() {
       const keyword = searchInput.value.trim().toLowerCase();
-      const today = formatDate(new Date());
-      let filtered = wrongQuestions.filter(item => {
-        const subjectOk = !filterSubject.value || item.subject === filterSubject.value;
-        const statusOk = !filterStatus.value || item.status === filterStatus.value;
-        const typeOk = !filterType.value || item.type === filterType.value;
-        const reasonOk = !filterReason.value || item.mistakeReason === filterReason.value;
-        const dueOk = matchDueFilter(item, today);
-        const text = `${item.subject} ${item.year} ${item.number} ${item.type} ${item.knowledge} ${item.note} ${item.status} ${item.mistakeReason} ${item.priority}`.toLowerCase();
-        return subjectOk && statusOk && typeOk && reasonOk && dueOk && (!keyword || text.includes(keyword));
+      let list = questions.filter(item => {
+        const text = `${item.subject} ${item.source} ${item.number} ${item.knowledge}`.toLowerCase();
+        return !keyword || text.includes(keyword);
       });
-
-      filtered = sortQuestions(filtered);
-      const dueCount = filtered.filter(item => !item.archived && item.nextReviewDate <= today).length;
-      const masteredCount = filtered.filter(item => item.status === "已掌握").length;
-      const highCount = filtered.filter(item => item.priority === "高频" || item.priority === "重点").length;
-      listSummary.textContent = `当前筛选：${filtered.length} 道｜到期 ${dueCount} 道｜已掌握 ${masteredCount} 道｜重点/高频 ${highCount} 道`;
-
-      if (!filtered.length) {
-        wrongList.innerHTML = `<div class="empty">暂无符合条件的错题。</div>`;
+      list = sortQuestions(list);
+      if (!list.length) {
+        libraryList.innerHTML = `<div class="empty">暂无错题。先在左侧输入错题。</div>`;
         return;
       }
-
-      wrongList.innerHTML = filtered.map(item => {
-        const due = getDueStatus(item, today);
-        return `
-          <article class="card ${item.nextReviewDate <= today && !item.archived ? "due" : ""} ${item.archived ? "archived" : ""}">
-            <div class="card-title">
-              <strong>${escapeHtml(item.subject)} ${escapeHtml(item.year)} 年 第 ${escapeHtml(item.number)} 题</strong>
-              <span class="tag ${due.className}">${escapeHtml(due.text)}</span>
-            </div>
-            <div class="tags">
-              <span class="tag">${escapeHtml(item.status)}</span>
-              <span class="tag gray">${escapeHtml(item.type)}</span>
-              <span class="tag ${item.difficulty === "高" ? "red" : item.difficulty === "低" ? "green" : "orange"}">难度：${escapeHtml(item.difficulty)}</span>
-              <span class="tag ${item.priority === "高频" ? "red" : item.priority === "重点" ? "orange" : "gray"}">${escapeHtml(item.priority)}</span>
-              <span class="tag gray">${escapeHtml(item.source)}</span>
-              <span class="tag gray">错因：${escapeHtml(item.mistakeReason)}</span>
-            </div>
-            <div class="meta">
-              知识点：${escapeHtml(item.knowledge || "未填写")}<br />
-              备注：${escapeHtml(item.note || "无")}<br />
-              错题日期：${escapeHtml(item.wrongDate)} ｜ 复习次数：${item.reviewCount} ｜ 做错次数：${item.wrongCount} ｜ 连续会了：${item.streak}<br />
-              上次复习：${escapeHtml(item.lastReviewDate || "无")} ｜ 上次结果：${escapeHtml(item.lastResult || "无")} ｜ 下次复习：${escapeHtml(item.nextReviewDate)}
-            </div>
-            <div class="button-row">
-              <button class="soft" onclick="fillEditForm('${item.id}')">编辑</button>
-              ${item.archived ? `<button class="ghost" onclick="restoreQuestion('${item.id}')">恢复</button>` : `<button class="ghost" onclick="addToToday('${item.id}')">加入今日</button><button class="soft" onclick="archiveQuestion('${item.id}')">归档</button>`}
-              <button class="danger" onclick="deleteQuestion('${item.id}')">删除</button>
-            </div>
-          </article>
-        `;
-      }).join("");
+      libraryList.innerHTML = list.map(item => renderQuestionCard(item, null, false)).join("");
     }
 
-    function matchDueFilter(item, today) {
-      if (filterDue.value === "archived") return item.archived;
-      if (item.archived) return false;
-      if (filterDue.value === "due") return item.nextReviewDate <= today;
-      if (filterDue.value === "overdue") return item.nextReviewDate < today;
-      if (filterDue.value === "future") return item.nextReviewDate > today;
-      return true;
+    function renderQuestionCard(item, index, isTodayCard) {
+      const current = today();
+      const overdue = Math.max(0, daysBetween(item.nextReviewDate, current));
+      const lastGap = item.lastGeneratedDate ? daysBetween(item.lastGeneratedDate, current) : null;
+      const dueClass = item.nextReviewDate <= current ? "due" : "";
+      const dueText = item.nextReviewDate <= current ? overdue > 0 ? `逾期 ${overdue} 天` : "今日到期" : `${daysBetween(current, item.nextReviewDate)} 天后到期`;
+      return `
+        <article class="card ${dueClass}">
+          <div class="card-title">
+            <strong>${index ? `第 ${index} 道：` : ""}${escapeHtml(item.subject)}｜${escapeHtml(item.source)}｜第 ${escapeHtml(item.number)} 题</strong>
+            <span class="tag ${item.nextReviewDate <= current ? "orange" : "green"}">${escapeHtml(dueText)}</span>
+          </div>
+          <div class="meta">
+            知识点：${escapeHtml(item.knowledge)}<br />
+            连续会了：${item.consecutiveKnown} / 3 ｜ 不会次数：${item.wrongCount} ｜ 生成次数：${item.generatedCount}<br />
+            上次生成：${escapeHtml(item.lastGeneratedDate || "从未生成")} ｜ ${lastGap === null ? "从未出现" : `距上次出现 ${lastGap} 天`} ｜ 下次复习：${escapeHtml(item.nextReviewDate)}
+          </div>
+          <div class="buttons">
+            ${isTodayCard ? `<button class="success" onclick="markKnown('${item.id}')">会了</button><button class="danger" onclick="markWrong('${item.id}')">不会</button>` : `<button class="soft" onclick="removeQuestion('${item.id}')">删除</button>`}
+          </div>
+        </article>
+      `;
     }
 
-    function sortQuestions(items) {
-      const priorityRank = { 高频: 3, 重点: 2, 普通: 1 };
-      const sorted = [...items];
-      if (sortBy.value === "wrongCount") sorted.sort((a, b) => b.wrongCount - a.wrongCount);
-      if (sortBy.value === "reviewCount") sorted.sort((a, b) => a.reviewCount - b.reviewCount);
-      if (sortBy.value === "createdAt") sorted.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-      if (sortBy.value === "priority") sorted.sort((a, b) => (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0));
-      if (sortBy.value === "nextDate") sorted.sort((a, b) => String(a.nextReviewDate).localeCompare(String(b.nextReviewDate)));
+    function sortQuestions(list) {
+      const current = today();
+      const sorted = [...list];
+      if (sortBy.value === "priority") sorted.sort((a, b) => getScore(b, current) - getScore(a, current));
+      if (sortBy.value === "oldest") sorted.sort((a, b) => daysBetween(b.lastGeneratedDate || "2000-01-01", current) - daysBetween(a.lastGeneratedDate || "2000-01-01", current));
+      if (sortBy.value === "wrong") sorted.sort((a, b) => b.wrongCount - a.wrongCount);
+      if (sortBy.value === "newest") sorted.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       return sorted;
     }
 
-    function handleShortcut(event) {
-      const tag = document.activeElement.tagName.toLowerCase();
-      if (["input", "textarea", "select"].includes(tag)) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        searchInput.focus();
-      }
-      if (event.key.toLowerCase() === "g") generateTodayQuestions();
-      if (["1", "2", "3"].includes(event.key) && todaySet.ids.length) {
-        const result = event.key === "1" ? "known" : event.key === "2" ? "blur" : "wrong";
-        markReview(todaySet.ids[0], result);
-      }
-    }
-
-    function createId() {
-      return `q-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    }
-
-    function formatDate(date) {
-      const d = new Date(date);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+    function today() {
+      return formatDate(new Date());
     }
 
     function addDays(dateText, days) {
@@ -1337,8 +588,20 @@
       return Math.floor((end - start) / 86400000);
     }
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
+    function formatDate(date) {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function normalizeNumber(value) {
+      return String(value || "").trim().replace(/^第/, "").replace(/题$/, "");
+    }
+
+    function createId() {
+      return `q-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     }
 
     function escapeHtml(value) {
@@ -1352,7 +615,7 @@
 
     function showNotice(element, message, isError) {
       element.textContent = message;
-      element.className = isError ? "notice danger-text" : "notice";
+      element.className = isError ? "notice error" : "notice";
       setTimeout(() => {
         if (element.textContent === message) element.textContent = "";
       }, 3600);
