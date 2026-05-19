@@ -188,6 +188,9 @@
               </div>
             </div>
 
+            <label for="wrongReason">错的原因</label>
+            <input id="wrongReason" placeholder="如 概念不清、计算错误、审题错误、方法不会" />
+
             <div class="buttons">
               <button type="submit">添加错题</button>
               <button type="button" class="soft" id="clearBtn">清空</button>
@@ -257,6 +260,7 @@
     const sourceEl = document.getElementById("source");
     const numberEl = document.getElementById("number");
     const knowledgeEl = document.getElementById("knowledge");
+    const wrongReasonEl = document.getElementById("wrongReason");
     const formNotice = document.getElementById("formNotice");
     const dataNotice = document.getElementById("dataNotice");
     const generateCountEl = document.getElementById("generateCount");
@@ -272,6 +276,7 @@
       const source = sourceEl.value.trim();
       const number = normalizeNumber(numberEl.value);
       const knowledge = knowledgeEl.value.trim();
+      const wrongReason = wrongReasonEl.value.trim();
 
       const duplicate = questions.find(item => item.subject === subject && item.source === source && normalizeNumber(item.number) === number);
       if (duplicate && !confirm("这道错题已经存在，是否仍然添加？")) return;
@@ -282,6 +287,7 @@
         source,
         number,
         knowledge,
+        wrongReason,
         createdAt: new Date().toISOString(),
         lastGeneratedDate: null,
         nextReviewDate: addDays(today(), 1),
@@ -293,6 +299,7 @@
       renderAll();
       numberEl.value = "";
       knowledgeEl.value = "";
+      wrongReasonEl.value = "";
       numberEl.focus();
       showNotice(formNotice, "已添加错题，明天开始进入复习池。", false);
     });
@@ -382,6 +389,7 @@
           source: item.source || item.type || "旧数据",
           number: item.number,
           knowledge: item.knowledge,
+          wrongReason: item.wrongReason || item.mistakeReason || item.note || "",
           createdAt: item.createdAt,
           lastGeneratedDate: item.lastReviewDate,
           nextReviewDate: item.nextReviewDate,
@@ -421,6 +429,8 @@
         source: item.source || "未填写",
         number: normalizeNumber(item.number || ""),
         knowledge: item.knowledge || "未填写",
+        wrongReason: item.wrongReason || "未填写",
+        lastWrongDate: item.lastWrongDate || null,
         createdAt: item.createdAt || new Date().toISOString(),
         lastGeneratedDate: item.lastGeneratedDate || null,
         nextReviewDate: item.nextReviewDate || addDays(today(), 1),
@@ -444,10 +454,12 @@
       const overdueDays = Math.max(0, daysBetween(item.nextReviewDate, current));
       const lastGeneratedGap = item.lastGeneratedDate ? Math.max(0, daysBetween(item.lastGeneratedDate, current)) : 30;
       const dueScore = item.nextReviewDate <= current ? 1000 : 0;
-      const wrongScore = item.wrongCount * 80;
+      const wrongScore = item.wrongCount * 140;
+      const recentWrongScore = item.lastWrongDate ? Math.max(0, 7 - daysBetween(item.lastWrongDate, current)) * 35 : 0;
+      const reasonScore = item.wrongReason && item.wrongReason !== "未填写" ? 40 : 0;
       const neverScore = item.generatedCount === 0 ? 160 : 0;
       const knownPenalty = item.consecutiveKnown * 90;
-      return dueScore + overdueDays * 45 + lastGeneratedGap * 18 + wrongScore + neverScore - knownPenalty + Math.random();
+      return dueScore + overdueDays * 45 + lastGeneratedGap * 18 + wrongScore + recentWrongScore + reasonScore + neverScore - knownPenalty + Math.random();
     }
 
     function markKnown(id) {
@@ -477,6 +489,7 @@
       if (!item) return;
       item.wrongCount += 1;
       item.consecutiveKnown = 0;
+      item.lastWrongDate = today();
       item.nextReviewDate = addDays(today(), 1);
       todaySet.ids = todaySet.ids.filter(questionId => questionId !== id);
       saveQuestions();
@@ -523,7 +536,7 @@
     function renderLibrary() {
       const keyword = searchInput.value.trim().toLowerCase();
       let list = questions.filter(item => {
-        const text = `${item.subject} ${item.source} ${item.number} ${item.knowledge}`.toLowerCase();
+        const text = `${item.subject} ${item.source} ${item.number} ${item.knowledge} ${item.wrongReason}`.toLowerCase();
         return !keyword || text.includes(keyword);
       });
       list = sortQuestions(list);
@@ -548,7 +561,8 @@
           </div>
           <div class="meta">
             知识点：${escapeHtml(item.knowledge)}<br />
-            连续会了：${item.consecutiveKnown} / 3 ｜ 不会次数：${item.wrongCount} ｜ 生成次数：${item.generatedCount}<br />
+            错的原因：${escapeHtml(item.wrongReason || "未填写")}<br />
+            错的次数：${item.wrongCount} ｜ 连续会了：${item.consecutiveKnown} / 3 ｜ 生成次数：${item.generatedCount}<br />
             上次生成：${escapeHtml(item.lastGeneratedDate || "从未生成")} ｜ ${lastGap === null ? "从未出现" : `距上次出现 ${lastGap} 天`} ｜ 下次复习：${escapeHtml(item.nextReviewDate)}
           </div>
           <div class="buttons">
