@@ -1,7 +1,7 @@
 {
   "version": 1,
   "app": "wrong-question-simple",
-  "exportedAt": "2026-05-19T11:17:05.282Z",
+  "exportedAt": "2026-05-19T11:58:40.966Z",
   "count": 3,
   "questions": [
     {
@@ -11,13 +11,13 @@
       "number": "29",
       "knowledge": "极限",
       "wrongReason": "未填写",
-      "lastWrongDate": null,
+      "lastWrongDate": "2026-05-19",
       "createdAt": "2026-05-19T11:16:58.855Z",
-      "lastGeneratedDate": null,
+      "lastGeneratedDate": "2026-05-19",
       "nextReviewDate": "2026-05-20",
       "reviewCount": 0,
-      "wrongCount": 0,
-      "generatedCount": 0,
+      "wrongCount": 1,
+      "generatedCount": 1,
       "consecutiveKnown": 0
     },
     {
@@ -27,13 +27,13 @@
       "number": "21",
       "knowledge": "极限",
       "wrongReason": "未填写",
-      "lastWrongDate": null,
+      "lastWrongDate": "2026-05-19",
       "createdAt": "2026-05-19T11:13:56.270Z",
-      "lastGeneratedDate": null,
+      "lastGeneratedDate": "2026-05-19",
       "nextReviewDate": "2026-05-20",
       "reviewCount": 0,
-      "wrongCount": 0,
-      "generatedCount": 0,
+      "wrongCount": 1,
+      "generatedCount": 1,
       "consecutiveKnown": 0
     },
     {
@@ -45,12 +45,12 @@
       "wrongReason": "未填写",
       "lastWrongDate": null,
       "createdAt": "2026-05-19T11:13:45.984Z",
-      "lastGeneratedDate": null,
-      "nextReviewDate": "2026-05-20",
-      "reviewCount": 0,
+      "lastGeneratedDate": "2026-05-19",
+      "nextReviewDate": "2026-05-21",
+      "reviewCount": 1,
       "wrongCount": 0,
-      "generatedCount": 0,
-      "consecutiveKnown": 0
+      "generatedCount": 1,
+      "consecutiveKnown": 1
     }
   ]
 }
