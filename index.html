@@ -163,7 +163,7 @@
       <div class="stat"><div class="label">错题总数</div><div class="value" id="totalCount">0</div></div>
       <div class="stat"><div class="label">今日生成</div><div class="value" id="todayCount">0</div></div>
       <div class="stat"><div class="label">今日已完成</div><div class="value" id="doneCount">0</div></div>
-      <div class="stat"><div class="label">已到期</div><div class="value" id="dueCount">0</div></div>
+      <div class="stat"><div class="label">今日应复习</div><div class="value" id="dueCount">0</div></div>
     </section>
 
     <section class="layout">
@@ -215,12 +215,7 @@
             <h2>每日生成</h2>
             <div class="count-box">
               <label for="generateCount">生成数量</label>
-              <select id="generateCount">
-                <option value="5">5 道</option>
-                <option value="10" selected>10 道</option>
-                <option value="15">15 道</option>
-                <option value="20">20 道</option>
-              </select>
+              <input id="generateCount" type="number" min="1" max="100" value="10" placeholder="输入要生成几道" />
             </div>
             <div class="buttons">
               <button id="generateBtn">生成错题</button>
@@ -309,7 +304,8 @@
 
     document.getElementById("generateBtn").addEventListener("click", () => {
       if (todaySet.ids.length && !confirm("今日清单还没有完成，是否重新生成？")) return;
-      const count = Number(generateCountEl.value || 10);
+      const count = Math.max(1, Math.min(100, Number(generateCountEl.value || 10)));
+      generateCountEl.value = count;
       const selected = pickQuestions(count);
       const date = today();
       selected.forEach(item => {
@@ -543,7 +539,7 @@
       const overdue = Math.max(0, daysBetween(item.nextReviewDate, current));
       const lastGap = item.lastGeneratedDate ? daysBetween(item.lastGeneratedDate, current) : null;
       const dueClass = item.nextReviewDate <= current ? "due" : "";
-      const dueText = item.nextReviewDate <= current ? overdue > 0 ? `逾期 ${overdue} 天` : "今日到期" : `${daysBetween(current, item.nextReviewDate)} 天后到期`;
+      const dueText = item.nextReviewDate <= current ? overdue > 0 ? `已晚复习 ${overdue} 天` : "今日应复习" : `${daysBetween(current, item.nextReviewDate)} 天后复习`;
       return `
         <article class="card ${dueClass}">
           <div class="card-title">
