@@ -250,6 +250,7 @@
             <div class="buttons">
               <button class="success" id="githubUploadBtn">上传到 GitHub</button>
               <button class="soft" id="githubDownloadBtn">从 GitHub 下载</button>
+              <button class="gray" id="sharedDownloadBtn">从共享题库加载</button>
             </div>
             <div class="notice" id="githubNotice"></div>
           </div>
@@ -437,6 +438,7 @@
     githubTokenEl.addEventListener("input", saveGithubToken);
     document.getElementById("githubUploadBtn").addEventListener("click", uploadToGithub);
     document.getElementById("githubDownloadBtn").addEventListener("click", downloadFromGithub);
+    document.getElementById("sharedDownloadBtn").addEventListener("click", downloadSharedLibrary);
 
     function applyGithubConfig() {
       const saved = loadGithubConfig();
@@ -608,12 +610,37 @@
       }
     }
 
+    async function downloadSharedLibrary() {
+      try {
+        const config = getGithubConfig(false);
+        const remote = await getGithubFile({ ...config, token: "" });
+        if (!remote.exists) {
+          showNotice(githubNotice, "共享题库还没有数据。你先用 Token 上传一次，朋友就能加载。", true);
+          return;
+        }
+        const text = decodeBase64Utf8(remote.content);
+        const parsed = JSON.parse(text);
+        const imported = Array.isArray(parsed) ? parsed : parsed.questions;
+        if (!Array.isArray(imported)) throw new Error("共享题库格式不正确。");
+        if (!confirm(`将加载共享题库里的 ${imported.length} 道错题，并覆盖当前浏览器里的 ${questions.length} 道错题，是否继续？`)) return;
+        questions = imported.map(normalizeQuestion);
+        todaySet = { date: today(), ids: [], initialCount: 0 };
+        saveQuestions();
+        saveTodaySet();
+        renderAll();
+        showNotice(githubNotice, `已加载共享题库：${questions.length} 道错题。`, false);
+      } catch (error) {
+        showNotice(githubNotice, error.message || "共享题库加载失败。", true);
+      }
+    }
+
     function githubHeaders(config) {
-      return {
+      const headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": `Bearer ${config.token}`,
         "X-GitHub-Api-Version": "2022-11-28"
       };
+      if (config.token) headers.Authorization = `Bearer ${config.token}`;
+      return headers;
     }
 
     async function readGithubBody(response) {
