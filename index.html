@@ -298,6 +298,7 @@
     const GITHUB_SYNC_KEY = "wrong-question-simple-github-sync-v1";
     const GITHUB_TOKEN_KEY = "wrong-question-simple-github-token-v1";
     const intervals = [1, 2, 4, 7, 15, 30, 60];
+    const SHARED_AUTO_LOAD_KEY = "wrong-question-simple-shared-loaded-v1";
 
     let questions = loadQuestions();
     let todaySet = loadTodaySet();
@@ -612,26 +613,45 @@
 
     async function downloadSharedLibrary() {
       try {
-        const config = getGithubConfig(false);
-        const remote = await getGithubFile({ ...config, token: "" });
-        if (!remote.exists) {
-          showNotice(githubNotice, "共享题库还没有数据。你先用 Token 上传一次，朋友就能加载。", true);
-          return;
-        }
-        const text = decodeBase64Utf8(remote.content);
-        const parsed = JSON.parse(text);
-        const imported = Array.isArray(parsed) ? parsed : parsed.questions;
-        if (!Array.isArray(imported)) throw new Error("共享题库格式不正确。");
+        const imported = await fetchSharedQuestions();
         if (!confirm(`将加载共享题库里的 ${imported.length} 道错题，并覆盖当前浏览器里的 ${questions.length} 道错题，是否继续？`)) return;
-        questions = imported.map(normalizeQuestion);
-        todaySet = { date: today(), ids: [], initialCount: 0 };
-        saveQuestions();
-        saveTodaySet();
-        renderAll();
+        applyImportedQuestions(imported);
+        localStorage.setItem(SHARED_AUTO_LOAD_KEY, "1");
         showNotice(githubNotice, `已加载共享题库：${questions.length} 道错题。`, false);
       } catch (error) {
         showNotice(githubNotice, error.message || "共享题库加载失败。", true);
       }
+    }
+
+    async function autoLoadSharedLibraryIfEmpty() {
+      if (questions.length || localStorage.getItem(SHARED_AUTO_LOAD_KEY)) return;
+      try {
+        const imported = await fetchSharedQuestions();
+        applyImportedQuestions(imported);
+        localStorage.setItem(SHARED_AUTO_LOAD_KEY, "1");
+        showNotice(githubNotice, `已自动加载共享题库：${questions.length} 道错题。`, false);
+      } catch (error) {
+        showNotice(githubNotice, "当前浏览器暂无本地错题。你可以让题库维护者先上传到 GitHub，或手动导入 JSON。", true);
+      }
+    }
+
+    async function fetchSharedQuestions() {
+      const config = getGithubConfig(false);
+      const remote = await getGithubFile({ ...config, token: "" });
+      if (!remote.exists) throw new Error("共享题库还没有数据。你先用 Token 上传一次，朋友就能加载。");
+      const text = decodeBase64Utf8(remote.content);
+      const parsed = JSON.parse(text);
+      const imported = Array.isArray(parsed) ? parsed : parsed.questions;
+      if (!Array.isArray(imported)) throw new Error("共享题库格式不正确。");
+      return imported;
+    }
+
+    function applyImportedQuestions(imported) {
+      questions = imported.map(normalizeQuestion);
+      todaySet = { date: today(), ids: [], initialCount: 0 };
+      saveQuestions();
+      saveTodaySet();
+      renderAll();
     }
 
     function githubHeaders(config) {
@@ -881,6 +901,7 @@
     }
 
     renderAll();
+    autoLoadSharedLibraryIfEmpty();
   </script>
 </body>
 </html>
