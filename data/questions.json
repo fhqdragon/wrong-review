@@ -1,7 +1,40 @@
 {
   "version": 1,
   "app": "wrong-question-simple",
-  "exportedAt": "2026-05-19T11:12:03.209Z",
-  "count": 0,
-  "questions": []
+  "exportedAt": "2026-05-19T11:12:54.678Z",
+  "count": 2,
+  "questions": [
+    {
+      "id": "q-1779188876441-fee31328c060e",
+      "subject": "数学二",
+      "source": "660",
+      "number": "21",
+      "knowledge": "极限",
+      "wrongReason": "未填写",
+      "lastWrongDate": null,
+      "createdAt": "2026-05-19T11:07:56.442Z",
+      "lastGeneratedDate": null,
+      "nextReviewDate": "2026-05-20",
+      "reviewCount": 0,
+      "wrongCount": 0,
+      "generatedCount": 0,
+      "consecutiveKnown": 0
+    },
+    {
+      "id": "q-1779188814169-530950488d829",
+      "subject": "数学二",
+      "source": "660",
+      "number": "12",
+      "knowledge": "极限",
+      "wrongReason": "知识盲区",
+      "lastWrongDate": null,
+      "createdAt": "2026-05-19T11:06:54.169Z",
+      "lastGeneratedDate": null,
+      "nextReviewDate": "2026-05-20",
+      "reviewCount": 0,
+      "wrongCount": 0,
+      "generatedCount": 0,
+      "consecutiveKnown": 0
+    }
+  ]
 }
