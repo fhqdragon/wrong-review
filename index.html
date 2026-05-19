@@ -76,6 +76,8 @@
     button.gray, .file-label { background: #374151; }
     button.soft { background: #eef2ff; color: #3730a3; }
     input[type="file"] { display: none; }
+    .sync-box { border-top: 1px solid #e5e7eb; margin-top: 16px; padding-top: 14px; }
+    .sync-box h3 { margin: 0 0 10px; font-size: 17px; }
     .notice { min-height: 20px; margin-top: 10px; color: #047857; font-size: 14px; line-height: 1.6; }
     .error { color: #dc2626; }
     .alert {
@@ -209,6 +211,48 @@
             <button class="danger" id="clearAllBtn">清空全部</button>
           </div>
           <div class="notice" id="dataNotice"></div>
+
+          <div class="sync-box">
+            <h3>GitHub 云备份</h3>
+            <div class="alert"><strong>Token 安全提示：</strong>Token 只在你当前浏览器中使用，不会写进网页源码。公共电脑不要选择保存 Token。</div>
+
+            <label for="githubToken">GitHub Token</label>
+            <input id="githubToken" type="password" autocomplete="off" placeholder="粘贴 GitHub Token" />
+
+            <label for="githubTokenMode">Token 保存方式</label>
+            <select id="githubTokenMode">
+              <option value="session">仅本次打开页面使用</option>
+              <option value="local">保存到当前浏览器</option>
+            </select>
+
+            <div class="row">
+              <div>
+                <label for="githubOwner">Owner</label>
+                <input id="githubOwner" value="fhqdragon" />
+              </div>
+              <div>
+                <label for="githubRepo">Repo</label>
+                <input id="githubRepo" value="wrong-review" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="githubPath">保存路径</label>
+                <input id="githubPath" value="data/questions.json" />
+              </div>
+              <div>
+                <label for="githubBranch">分支</label>
+                <input id="githubBranch" value="main" />
+              </div>
+            </div>
+
+            <div class="buttons">
+              <button class="success" id="githubUploadBtn">上传到 GitHub</button>
+              <button class="soft" id="githubDownloadBtn">从 GitHub 下载</button>
+            </div>
+            <div class="notice" id="githubNotice"></div>
+          </div>
         </section>
       </div>
 
@@ -250,10 +294,13 @@
     const STORAGE_KEY = "wrong-question-simple-v1";
     const OLD_STORAGE_KEY = "wrong-question-review-v1";
     const TODAY_KEY = "wrong-question-simple-today-v1";
+    const GITHUB_SYNC_KEY = "wrong-question-simple-github-sync-v1";
+    const GITHUB_TOKEN_KEY = "wrong-question-simple-github-token-v1";
     const intervals = [1, 2, 4, 7, 15, 30, 60];
 
     let questions = loadQuestions();
     let todaySet = loadTodaySet();
+    let githubSessionToken = "";
 
     const form = document.getElementById("questionForm");
     const subjectEl = document.getElementById("subject");
@@ -263,12 +310,21 @@
     const wrongReasonEl = document.getElementById("wrongReason");
     const formNotice = document.getElementById("formNotice");
     const dataNotice = document.getElementById("dataNotice");
+    const githubTokenEl = document.getElementById("githubToken");
+    const githubTokenModeEl = document.getElementById("githubTokenMode");
+    const githubOwnerEl = document.getElementById("githubOwner");
+    const githubRepoEl = document.getElementById("githubRepo");
+    const githubPathEl = document.getElementById("githubPath");
+    const githubBranchEl = document.getElementById("githubBranch");
+    const githubNotice = document.getElementById("githubNotice");
     const generateCountEl = document.getElementById("generateCount");
     const progressBox = document.getElementById("progressBox");
     const todayList = document.getElementById("todayList");
     const libraryList = document.getElementById("libraryList");
     const searchInput = document.getElementById("searchInput");
     const sortBy = document.getElementById("sortBy");
+
+    applyGithubConfig();
 
     form.addEventListener("submit", event => {
       event.preventDefault();
@@ -375,6 +431,67 @@
       showNotice(dataNotice, "全部数据已清空。", false);
     });
 
+    [githubOwnerEl, githubRepoEl, githubPathEl, githubBranchEl, githubTokenModeEl].forEach(element => {
+      element.addEventListener("change", saveGithubConfig);
+    });
+    githubTokenEl.addEventListener("input", saveGithubToken);
+    document.getElementById("githubUploadBtn").addEventListener("click", uploadToGithub);
+    document.getElementById("githubDownloadBtn").addEventListener("click", downloadFromGithub);
+
+    function applyGithubConfig() {
+      const saved = loadGithubConfig();
+      githubOwnerEl.value = saved.owner;
+      githubRepoEl.value = saved.repo;
+      githubPathEl.value = saved.path;
+      githubBranchEl.value = saved.branch;
+      githubTokenModeEl.value = saved.tokenMode;
+      if (saved.tokenMode === "local") githubTokenEl.value = localStorage.getItem(GITHUB_TOKEN_KEY) || "";
+    }
+
+    function loadGithubConfig() {
+      const defaults = { owner: "fhqdragon", repo: "wrong-review", path: "data/questions.json", branch: "main", tokenMode: "session" };
+      try {
+        return { ...defaults, ...JSON.parse(localStorage.getItem(GITHUB_SYNC_KEY) || "{}") };
+      } catch (error) {
+        return defaults;
+      }
+    }
+
+    function saveGithubConfig() {
+      const config = getGithubConfig(false);
+      localStorage.setItem(GITHUB_SYNC_KEY, JSON.stringify({
+        owner: config.owner,
+        repo: config.repo,
+        path: config.path,
+        branch: config.branch,
+        tokenMode: config.tokenMode
+      }));
+      saveGithubToken();
+    }
+
+    function saveGithubToken() {
+      if (githubTokenModeEl.value === "local") {
+        localStorage.setItem(GITHUB_TOKEN_KEY, githubTokenEl.value.trim());
+      } else {
+        githubSessionToken = githubTokenEl.value.trim();
+        localStorage.removeItem(GITHUB_TOKEN_KEY);
+      }
+    }
+
+    function getGithubConfig(requireToken = true) {
+      const config = {
+        token: githubTokenModeEl.value === "local" ? (localStorage.getItem(GITHUB_TOKEN_KEY) || githubTokenEl.value.trim()) : (githubSessionToken || githubTokenEl.value.trim()),
+        tokenMode: githubTokenModeEl.value,
+        owner: githubOwnerEl.value.trim(),
+        repo: githubRepoEl.value.trim(),
+        path: githubPathEl.value.trim().replace(/^\/+/, ""),
+        branch: githubBranchEl.value.trim()
+      };
+      if (!config.owner || !config.repo || !config.path || !config.branch) throw new Error("请填写完整的 GitHub 仓库配置。");
+      if (requireToken && !config.token) throw new Error("请先填写 GitHub Token。");
+      return config;
+    }
+
     function loadQuestions() {
       const current = localStorage.getItem(STORAGE_KEY);
       if (current) {
@@ -420,6 +537,111 @@
 
     function saveTodaySet() {
       localStorage.setItem(TODAY_KEY, JSON.stringify(todaySet));
+    }
+
+    async function getGithubFile(config) {
+      const url = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${config.path}?ref=${encodeURIComponent(config.branch)}`;
+      const response = await fetch(url, { headers: githubHeaders(config) });
+      const body = await readGithubBody(response);
+      if (response.status === 404) return { exists: false };
+      if (!response.ok) throw new Error(getGithubErrorMessage(response, body));
+      return { exists: true, sha: body.sha, content: body.content, htmlUrl: body.html_url };
+    }
+
+    async function uploadToGithub() {
+      try {
+        saveGithubConfig();
+        const config = getGithubConfig(true);
+        const remote = await getGithubFile(config);
+        const message = remote.exists
+          ? `将用当前浏览器里的 ${questions.length} 道错题覆盖 GitHub 备份，是否继续？`
+          : `GitHub 上还没有备份文件，将创建 ${config.path}，是否继续？`;
+        if (!confirm(message)) return;
+        const payload = JSON.stringify({
+          version: 1,
+          app: "wrong-question-simple",
+          exportedAt: new Date().toISOString(),
+          count: questions.length,
+          questions
+        }, null, 2);
+        const body = {
+          message: "Update wrong question backup",
+          content: encodeBase64Utf8(payload),
+          branch: config.branch
+        };
+        if (remote.exists) body.sha = remote.sha;
+        const response = await fetch(`https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${config.path}`, {
+          method: "PUT",
+          headers: { ...githubHeaders(config), "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await readGithubBody(response);
+        if (!response.ok) throw new Error(getGithubErrorMessage(response, result));
+        showNotice(githubNotice, `已上传到 GitHub：${questions.length} 道错题。`, false);
+      } catch (error) {
+        showNotice(githubNotice, error.message || "上传失败。", true);
+      }
+    }
+
+    async function downloadFromGithub() {
+      try {
+        saveGithubConfig();
+        const config = getGithubConfig(true);
+        const remote = await getGithubFile(config);
+        if (!remote.exists) {
+          showNotice(githubNotice, "GitHub 上还没有备份文件，请先上传本地数据。", true);
+          return;
+        }
+        const text = decodeBase64Utf8(remote.content);
+        const parsed = JSON.parse(text);
+        const imported = Array.isArray(parsed) ? parsed : parsed.questions;
+        if (!Array.isArray(imported)) throw new Error("GitHub 备份文件格式不正确。");
+        if (!confirm(`将用 GitHub 上的 ${imported.length} 道错题覆盖当前浏览器里的 ${questions.length} 道错题，是否继续？`)) return;
+        questions = imported.map(normalizeQuestion);
+        todaySet = { date: today(), ids: [], initialCount: 0 };
+        saveQuestions();
+        saveTodaySet();
+        renderAll();
+        showNotice(githubNotice, `已从 GitHub 下载并恢复 ${questions.length} 道错题。`, false);
+      } catch (error) {
+        showNotice(githubNotice, error.message || "下载失败。", true);
+      }
+    }
+
+    function githubHeaders(config) {
+      return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${config.token}`,
+        "X-GitHub-Api-Version": "2022-11-28"
+      };
+    }
+
+    async function readGithubBody(response) {
+      const text = await response.text();
+      if (!text) return {};
+      try { return JSON.parse(text); } catch (error) { return { message: text }; }
+    }
+
+    function getGithubErrorMessage(response, body) {
+      if (response.status === 401) return "GitHub Token 无效或已过期。";
+      if (response.status === 403) return "GitHub 拒绝访问，请检查 Token 是否有 Contents Read and write 权限。";
+      if (response.status === 404) return "没有找到 GitHub 仓库、分支或文件，请检查配置和 Token 授权。";
+      if (response.status === 409) return "GitHub 文件版本冲突，请先从 GitHub 下载确认后再上传。";
+      if (response.status === 422) return "GitHub 保存失败，请检查路径、分支或文件内容。";
+      return body.message || `GitHub 请求失败：${response.status}`;
+    }
+
+    function encodeBase64Utf8(text) {
+      const bytes = new TextEncoder().encode(text);
+      let binary = "";
+      bytes.forEach(byte => binary += String.fromCharCode(byte));
+      return btoa(binary);
+    }
+
+    function decodeBase64Utf8(base64) {
+      const binary = atob(String(base64).replace(/\s/g, ""));
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      return new TextDecoder("utf-8").decode(bytes);
     }
 
     function normalizeQuestion(item) {
