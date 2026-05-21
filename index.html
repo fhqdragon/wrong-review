@@ -262,6 +262,12 @@
           <div class="toolbar">
             <h2>每日生成</h2>
             <div class="count-box">
+              <label for="generateSubject">选择科目</label>
+              <select id="generateSubject">
+                <option value="">全部科目</option>
+              </select>
+            </div>
+            <div class="count-box">
               <label for="generateCount">生成数量</label>
               <input id="generateCount" type="number" min="1" max="100" value="10" placeholder="输入要生成几道" />
             </div>
@@ -319,6 +325,7 @@
     const githubPathEl = document.getElementById("githubPath");
     const githubBranchEl = document.getElementById("githubBranch");
     const githubNotice = document.getElementById("githubNotice");
+    const generateSubjectEl = document.getElementById("generateSubject");
     const generateCountEl = document.getElementById("generateCount");
     const progressBox = document.getElementById("progressBox");
     const todayList = document.getElementById("todayList");
@@ -370,8 +377,9 @@
     document.getElementById("generateBtn").addEventListener("click", () => {
       if (todaySet.ids.length && !confirm("今日清单还没有完成，是否重新生成？")) return;
       const count = Math.max(1, Math.min(100, Number(generateCountEl.value || 10)));
+      const subject = generateSubjectEl.value;
       generateCountEl.value = count;
-      const selected = pickQuestions(count);
+      const selected = pickQuestions(count, subject);
       const date = today();
       selected.forEach(item => {
         item.lastGeneratedDate = date;
@@ -381,7 +389,7 @@
       saveQuestions();
       saveTodaySet();
       renderAll();
-      showNotice(dataNotice, selected.length ? `已生成 ${selected.length} 道错题。` : "暂无可生成的错题。", false);
+      showNotice(dataNotice, selected.length ? `已生成 ${selected.length} 道${subject ? `「${subject}」` : ""}错题。` : "暂无可生成的错题。", false);
     });
 
     document.getElementById("printBtn").addEventListener("click", () => window.print());
@@ -710,9 +718,10 @@
       };
     }
 
-    function pickQuestions(count) {
+    function pickQuestions(count, subject = "") {
       const current = today();
       return questions
+        .filter(item => !subject || item.subject === subject)
         .map(item => ({ ...item, score: getScore(item, current) }))
         .sort((a, b) => b.score - a.score)
         .slice(0, count)
@@ -777,8 +786,16 @@
 
     function renderAll() {
       renderStats();
+      renderGenerateSubjects();
       renderToday();
       renderLibrary();
+    }
+
+    function renderGenerateSubjects() {
+      const current = generateSubjectEl.value;
+      const subjects = [...new Set(questions.map(item => item.subject).filter(Boolean))].sort();
+      generateSubjectEl.innerHTML = `<option value="">全部科目</option>${subjects.map(subject => `<option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>`).join("")}`;
+      generateSubjectEl.value = subjects.includes(current) ? current : "";
     }
 
     function renderStats() {
